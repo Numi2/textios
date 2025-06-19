@@ -20,10 +20,10 @@ class OpenAIService: ObservableObject {
         // Use chat completions, not responses endpoint
         let query = ChatQuery(
             messages: [
-                .init(role: .system, content: "You are a creative writing assistant. Help complete the story in a natural way."),
+                .init(role: .system, content: "You are AI autocomplete text software. Help user complete their sentence in a natural way."),
                 .init(role: .user, content: text)
             ],
-            model: .gpt3_5Turbo
+            model: .gpt4o
         )
         
         let result = try await client.chats(query: query)
