@@ -10,25 +10,31 @@ import SwiftUI
 struct StoryView: View {
     @Binding var document: WritingAppDocument
     @State private var isShowingSheet = false
+    @State private var selection = AttributedTextSelection()
     @FocusState private var isFocused: Bool
     
     var body: some View {
-        VStack {
-            TextEditor(text: $document.story)
+        VStack(spacing: 0) {
+            FormattingToolbar(text: $document.story, selection: $selection)
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+            
+            TextEditor(text: $document.story, selection: $selection)
                 .font(.title)
                 .textEditorStyle(.plain)
                 .scrollIndicators(.never)
+                .attributedTextFormattingDefinition(StoryFormattingDefinition())
                 .onAppear {
                     self.isFocused = true
                 }
                 .focused($isFocused)
+                .padding(.horizontal, 30)
+                .padding(.vertical, 20)
+                .background(.background)
+                .scrollClipDisabled()
+                .clipShape(RoundedRectangle(cornerRadius: 13))
+                .shadow(color: .black.opacity(0.2), radius: 5)
         }
-        .padding(.horizontal, 30)
-        .padding(.vertical, 20)
-        .background(.background)
-        .scrollClipDisabled()
-        .clipShape(RoundedRectangle(cornerRadius: 13))
-        .shadow(color: .black.opacity(0.2), radius: 5)
         #if os(macOS)
         .padding(.horizontal, 30)
         #else

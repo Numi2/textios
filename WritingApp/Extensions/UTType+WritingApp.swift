@@ -9,10 +9,6 @@ import UniformTypeIdentifiers
 
 // This app's document type.
 extension UTType {
-    static var writingAppDocument: UTType {
-        UTType(exportedAs: "com.example.writingAppDocument")
-    }
-    
     static var writingAppArchive: UTType {
         UTType(exportedAs: "com.example.writingapp.archive", conformingTo: .data)
     }

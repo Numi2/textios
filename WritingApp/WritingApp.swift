@@ -22,8 +22,17 @@ struct WritingApp: App {
             AccessoryView()
         }
         #endif
-        DocumentGroup(newDocument: WritingAppDocument()) { file in
+        DocumentGroup(newDocument: createNewDocument()) { file in
             StoryView(document: file.$document)
         }
+    }
+    
+    private func createNewDocument() -> WritingAppDocument {
+        var welcomeText = AttributedString("Welcome to Writing App! ")
+        welcomeText.font = .largeTitle
+        var startWriting = AttributedString("Start writing your story...")
+        startWriting.foregroundColor = .secondary
+        welcomeText += startWriting
+        return WritingAppDocument(text: welcomeText)
     }
 }

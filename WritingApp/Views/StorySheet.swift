@@ -1,5 +1,4 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
 
 Abstract:
 The sheet view that appears when reading.
@@ -8,7 +7,7 @@ The sheet view that appears when reading.
 import SwiftUI
 
 struct StorySheet: View {
-    var story: String
+    var story: AttributedString
     @Binding var isShowingSheet: Bool
 
     var body: some View {
@@ -64,5 +63,5 @@ struct DismissButton: View {
 }
 
 #Preview {
-    StorySheet(story: "", isShowingSheet: .constant(true))
+    StorySheet(story: AttributedString(""), isShowingSheet: .constant(true))
 }
