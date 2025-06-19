@@ -1,5 +1,5 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
+See the LICENSE.txt file for this sample's licensing information.
 
 Abstract:
 This file defines a type for this app's writing document.
@@ -11,5 +11,9 @@ import UniformTypeIdentifiers
 extension UTType {
     static var writingAppDocument: UTType {
         UTType(exportedAs: "com.example.writingAppDocument")
+    }
+    
+    static var writingAppArchive: UTType {
+        UTType(exportedAs: "com.example.writingapp.archive", conformingTo: .data)
     }
 }
