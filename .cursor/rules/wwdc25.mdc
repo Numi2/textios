@@ -1,0 +1,304 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+1:15 - TextEditor and String
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: String
+
+    var body: some View {
+        TextEditor(text: $text)
+    }
+}
+Copy Code
+1:45 - TextEditor and AttributedString
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: AttributedString
+
+    var body: some View {
+        TextEditor(text: $text)
+    }
+}
+Copy Code
+4:43 - AttributedString Basics
+
+var text = AttributedString(
+  "Hello 👋🏻! Who's ready to get "
+)
+
+var cooking = AttributedString("cooking")
+cooking.foregroundColor = .orange
+text += cooking
+
+text += AttributedString("?")
+
+text.font = .largeTitle
+Copy Code
+5:36 - Build custom controls: Basics (initial attempt)
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: AttributedString
+    @State private var selection = AttributedTextSelection()
+
+    var body: some View {
+        TextEditor(text: $text, selection: $selection)
+            .preference(key: NewIngredientPreferenceKey.self, value: newIngredientSuggestion)
+    }
+
+    private var newIngredientSuggestion: IngredientSuggestion {
+        let name = text[selection.indices(in: text)] // build error
+
+        return IngredientSuggestion(
+            suggestedName: AttributedString())
+    }
+}
+Copy Code
+8:53 - Slicing AttributedString with a Range
+
+var text = AttributedString(
+  "Hello 👋🏻! Who's ready to get cooking?"
+)
+
+guard let cookingRange = text.range(of: "cooking") else {
+  fatalError("Unable to find range of cooking")
+}
+
+text[cookingRange].foregroundColor = .orange
+Copy Code
+10:50 - Slicing AttributedString with a RangeSet
+
+var text = AttributedString(
+  "Hello 👋🏻! Who's ready to get cooking?"
+)
+
+let uppercaseRanges = text.characters
+  .indices(where: \.isUppercase)
+
+text[uppercaseRanges].foregroundColor = .blue
+Copy Code
+11:40 - Build custom controls: Basics (fixed)
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: AttributedString
+    @State private var selection = AttributedTextSelection()
+
+    var body: some View {
+        TextEditor(text: $text, selection: $selection)
+            .preference(key: NewIngredientPreferenceKey.self, value: newIngredientSuggestion)
+    }
+    private var newIngredientSuggestion: IngredientSuggestion {
+        let name = text[selection]
+
+        return IngredientSuggestion(
+            suggestedName: AttributedString(name))
+    }
+}
+Copy Code
+12:32 - Build custom controls: Recipe attribute
+
+import SwiftUI
+
+struct IngredientAttribute: CodableAttributedStringKey {
+    typealias Value = Ingredient.ID
+
+    static let name = "SampleRecipeEditor.IngredientAttribute"
+}
+
+extension AttributeScopes {
+    /// An attribute scope for custom attributes defined by this app.
+    struct CustomAttributes: AttributeScope {
+        /// An attribute for marking text as a reference to an recipe's ingredient.
+        let ingredient: IngredientAttribute
+    }
+}
+
+extension AttributeDynamicLookup {
+    /// The subscript for pulling custom attributes into the dynamic attribute lookup.
+    ///
+    /// This makes them available throughout the code using the name they have in the
+    /// `AttributeScopes.CustomAttributes` scope.
+    subscript<T: AttributedStringKey>(
+        dynamicMember keyPath: KeyPath<AttributeScopes.CustomAttributes, T>
+    ) -> T {
+        self[T.self]
+    }
+}
+Copy Code
+12:56 - Build custom controls: Modifying text (initial attempt)
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: AttributedString
+    @State private var selection = AttributedTextSelection()
+
+    var body: some View {
+        TextEditor(text: $text, selection: $selection)
+            .preference(key: NewIngredientPreferenceKey.self, value: newIngredientSuggestion)
+    }
+
+    private var newIngredientSuggestion: IngredientSuggestion {
+        let name = text[selection]
+
+        return IngredientSuggestion(
+            suggestedName: AttributedString(name),
+            onApply: { ingredientId in
+                let ranges = text.characters.ranges(of: name.characters)
+
+                for range in ranges {
+                    // modifying `text` without updating `selection` is invalid and resets the cursor 
+                    text[range].ingredient = ingredientId
+                }
+            })
+    }
+}
+Copy Code
+17:40 - AttributedString Character View
+
+text.characters[index] // "👋🏻"
+Copy Code
+17:44 - AttributedString Unicode Scalar View
+
+text.unicodeScalars[index] // "👋"
+Copy Code
+17:49 - AttributedString Runs View
+
+text.runs[index] // "Hello 👋🏻! ..."
+Copy Code
+18:13 - AttributedString UTF-8 View
+
+text.utf8[index] // "240"
+Copy Code
+18:17 - AttributedString UTF-16 View
+
+text.utf16[index] // "55357"
+Copy Code
+18:59 - Updating Indices during AttributedString Mutations
+
+var text = AttributedString(
+  "Hello 👋🏻! Who's ready to get cooking?"
+)
+
+guard var cookingRange = text.range(of: "cooking") else {
+  fatalError("Unable to find range of cooking")
+}
+
+let originalRange = cookingRange
+text.transform(updating: &cookingRange) { text in
+  text[originalRange].foregroundColor = .orange
+  
+  let insertionPoint = text
+    .index(text.startIndex, offsetByCharacters: 6)
+  
+  text.characters
+    .insert(contentsOf: "chef ", at: insertionPoint)
+}
+
+print(text[cookingRange])
+Copy Code
+20:22 - Build custom controls: Modifying text (fixed)
+
+import SwiftUI
+
+struct RecipeEditor: View {
+    @Binding var text: AttributedString
+    @State private var selection = AttributedTextSelection()
+
+    var body: some View {
+        TextEditor(text: $text, selection: $selection)
+            .preference(key: NewIngredientPreferenceKey.self, value: newIngredientSuggestion)
+    }
+
+    private var newIngredientSuggestion: IngredientSuggestion {
+        let name = text[selection]
+
+        return IngredientSuggestion(
+            suggestedName: AttributedString(name),
+            onApply: { ingredientId in
+                let ranges = RangeSet(text.characters.ranges(of: name.characters))
+
+                text.transform(updating: &selection) { text in
+                    text[ranges].ingredient = ingredientId
+                }
+            })
+    }
+}
+Copy Code
+22:03 - Define your text format: RecipeFormattingDefinition Scope
+
+struct RecipeFormattingDefinition: AttributedTextFormattingDefinition {
+    struct Scope: AttributeScope {
+        let foregroundColor: AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute
+        let adaptiveImageGlyph: AttributeScopes.SwiftUIAttributes.AdaptiveImageGlyphAttribute
+        let ingredient: IngredientAttribute
+    }
+
+    var body: some AttributedTextFormattingDefinition<Scope> {
+
+    }
+}
+
+// pass the custom formatting definition to the TextEditor in the updated `RecipeEditor.body`:
+
+        TextEditor(text: $text, selection: $selection)
+            .preference(key: NewIngredientPreferenceKey.self, value: newIngredientSuggestion)
+            .attributedTextFormattingDefinition(RecipeFormattingDefinition())
+Copy Code
+23:50 - Define your text format: AttributedTextValueConstraints
+
+struct IngredientsAreGreen: AttributedTextValueConstraint {
+    typealias Scope = RecipeFormattingDefinition.Scope
+    typealias AttributeKey = AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute
+
+    func constrain(_ container: inout Attributes) {
+        if container.ingredient != nil {
+            container.foregroundColor = .green
+        } else {
+            container.foregroundColor = nil
+        }
+    }
+}
+
+// list the value constraint in the recipe formatting definition's body:
+    var body: some AttributedTextFormattingDefinition<Scope> {
+        IngredientsAreGreen()
+    }
+Copy Code
+29:28 - AttributedStringKey Constraint: Inherited by Added Text
+
+static let inheritedByAddedText = false
+Copy Code
+30:12 - AttributedStringKey Constraint: Invalidation Conditions
+
+static let invalidationConditions:
+  Set<AttributedString.AttributeInvalidationCondition>? =
+  [.textChanged]
+Copy Code
+31:25 - AttributedStringKey Constraint: Run Boundaries
+
+static let runBoundaries:
+  AttributedString.AttributeRunBoundaries? =
+  .paragraph
+Copy Code
+32:46 - Define your text format: AttributedStringKey Constraints
+
+struct IngredientAttribute: CodableAttributedStringKey {
+    typealias Value = Ingredient.ID
+
+    static let name = "SampleRecipeEditor.IngredientAttribute"
+
+    static let inheritedByAddedText: Bool = false
+
+    static let invalidationConditions: Set<AttributedString.AttributeInvalidationCondition>? = [.textChanged]
+}
