@@ -20,7 +20,12 @@ let package = Package(
     targets: [
         .target(
             name: "textios",
-            dependencies: ["OpenAI"]),
+            dependencies: ["OpenAI"],
+            path: "WritingApp",
+            exclude: ["Info.plist", "WritingApp.entitlements", "Preview Content", "Resources"],
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]),
         .testTarget(
             name: "textiosTests",
             dependencies: ["textios"]),
